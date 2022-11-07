@@ -24,13 +24,23 @@ class timerange:
                 datetime(carrytime.year, carrytime.month, carrytime.day, 0, 0, 0),
                 datetime(carrytime.year, carrytime.month, carrytime.day, 23, 59, 59)
             )
-        if re.match(r"^\d{4}\-\d{1,2}$", text) is not None:
-            year, month = map(lambda e: int(e), text.split("-"))
-            month_range = monthrange(year, month)
-            return cls(
-                datetime(year, month, 1, 0, 0, 0),
-                datetime(year, month, month_range[1], 23, 59, 59)
-            )
+
+        for f in [
+            "%b-%Y",  # Oct-2022
+            "%Y-%b",  # 2022-Oct
+            "%m-%Y",  # 10-2022
+            "%Y-%m",  # 2022-10
+        ]:
+            try:
+                date = datetime.strptime(text, f)
+                month_range = monthrange(date.year, date.month)
+                return cls(
+                    datetime(date.year, date.month, 1, 0, 0, 0),
+                    datetime(date.year, date.month, month_range[1], 23, 59, 59)
+                )
+                break
+            except Exception:
+                continue
         return cls()
 
     def is_valid(self):

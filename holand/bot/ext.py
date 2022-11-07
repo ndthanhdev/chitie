@@ -2,7 +2,21 @@ import re
 import telegram
 
 from abc import abstractmethod
+from flask import current_app
 from urllib.parse import parse_qs, urlencode
+
+from holand.i18n import t
+
+
+class Bot(telegram.Bot):
+
+    def talks(self, text, parse_mode=None):
+        chat_id = current_app.config['bot.group_id']
+        if parse_mode is None:
+            content = t(text)
+            super().send_message(chat_id, content)
+        if parse_mode == telegram.ParseMode.MARKDOWN_V2:
+            super().send_message(chat_id, text, parse_mode=telegram.ParseMode.MARKDOWN_V2)
 
 
 class Message(telegram.Message):
@@ -22,6 +36,16 @@ class Message(telegram.Message):
             if entity.type == telegram.MessageEntity.BOT_COMMAND:
                 return True
         return False
+
+    def argumentstr(self):
+        if not self.is_command():
+            return None
+        args = ''
+        for entity in self.entities:
+            if entity.type == telegram.MessageEntity.BOT_COMMAND:
+                args = self.text[entity.offset + entity.length:]
+                break
+        return args.strip()
 
 
 class CallbackQuery(telegram.CallbackQuery):
@@ -61,6 +85,9 @@ class Handler:
             alias = class_name.removesuffix('Callback')
 
         return re.sub(r'(?<!^)(?=[A-Z])', '_', alias).lower()
+
+    def require_auth(self) -> bool:
+        return True
 
 
 class CallbackHandler(Handler):

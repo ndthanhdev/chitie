@@ -19,6 +19,7 @@ class SelectExpenseCategoryCallback(CallbackHandler):
         item.update_category(int(args['category_id']))
         category = ExpenseCategory.query.get(item.category_id)
         event.edit_message_text(f'> {category.name}')
+        return True
 
 
 class ShowMoreExpenseCategoryCallback(CallbackHandler):
@@ -35,3 +36,4 @@ class ShowMoreExpenseCategoryCallback(CallbackHandler):
             for category in categories
         ]
         event.edit_message_text(t('select category'), reply_markup=telegram.InlineKeyboardMarkup(buttons))
+        return True

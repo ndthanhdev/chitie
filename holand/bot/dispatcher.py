@@ -1,7 +1,7 @@
 import telegram
 from flask import current_app
 
-from holand.auth.user import find_by_telegram_uid
+import holand.auth.user as user
 
 from .callback import (
     SelectExpenseCategoryCallback,
@@ -9,10 +9,15 @@ from .callback import (
 )
 from .command import (
     SetupCommand,
-    ReviewCommand
+    ReviewCommand,
+    ShortcutCommand
 )
 from .ext import CallbackQuery, Message
-from .group import AddExpenseItem
+from .group import (
+    NewJoinUser,
+    LeftUser,
+    AddExpenseItem
+)
 
 
 class Dispatcher:
@@ -21,7 +26,8 @@ class Dispatcher:
         self.bot = bot
         self.commands = [
             SetupCommand(),
-            ReviewCommand()
+            ReviewCommand(),
+            ShortcutCommand()
         ]
         self.callbacks = [
             SelectExpenseCategoryCallback(),
@@ -53,21 +59,30 @@ class Dispatcher:
             event = Message.de_json(payload['message'], self.bot)
             if event is None:
                 return
-            print(event.is_command())
-            print(event.command())
             if event.is_command():
                 handler = self.command_handler(event.command())
+            elif event.new_chat_members is not None and len(event.new_chat_members) > 0:
+                handler = NewJoinUser()
+            elif event.left_chat_member is not None:
+                handler = LeftUser()
             elif event.text is not None and event.chat.id == current_app.config['bot.group_id']:
                 handler = AddExpenseItem()
 
         if event is None:
+            raise ValueError("Invalid message")
+        if event.from_user.is_bot:
             return
-
-        user = find_by_telegram_uid(event.from_user.id)
-        if user is None:
-            return
-
         if handler is None:
+            return
+        u = user.find_by_telegram_uid(event.from_user.id)
+        if u is None and current_app.config['bot.group_type'] == telegram.Chat.SUPERGROUP:
+            try:
+                chatmember = self.bot.get_chat_member(current_app.config['bot.group_id'], event.from_user.id)
+                u = user.User(chatmember.user.username, chatmember.user.id)
+                u.save()
+            except telegram.error.TelegramError:
+                pass
+        if handler.require_auth() and (u is None or not u.is_active):
             return
         handler.exec(event)
         pass

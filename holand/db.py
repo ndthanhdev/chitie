@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Flask
+from flask import Flask, g
 from flask_sqlalchemy import SQLAlchemy
 
 
@@ -9,6 +9,7 @@ connection = SQLAlchemy()
 
 def init_app(app: Flask):
     connection.init_app(app)
+    g.db = connection
 
 
 class ActiveRecord:
