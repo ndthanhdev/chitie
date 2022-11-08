@@ -69,9 +69,28 @@ class CallbackQuery(telegram.CallbackQuery):
 
 class Handler:
 
+    def __init__(self):
+        self._next = None
+
+    def set_next(self, handler: 'Handler'):
+        self._next = handler
+        return handler
+
+    def process(self, event: 'Message') -> bool:
+        if self.match(event):
+            self.exec(event)
+            return True
+        elif self._next is not None:
+            return self._next.process(event)
+        return False
+
+    @abstractmethod
+    def match(self, event: 'Message') -> bool:
+        raise NotImplementedError
+
     @abstractmethod
     def exec(self, event: telegram.TelegramObject):
-        pass
+        raise NotImplementedError
 
     @classmethod
     def str_alias(cls) -> str:
@@ -92,8 +111,30 @@ class Handler:
 
 class CallbackHandler(Handler):
 
+    def match(self, callbackquery: 'CallbackQuery'):
+        func_name = callbackquery.function()
+        if func_name != self.__class__.str_alias():
+            return False
+        return True
+
     @classmethod
     def build_callback_data(cls, **kwargs):
         args = urlencode(kwargs)
         data = '{}|{}'.format(cls.str_alias(), args)
         return data
+
+
+class CommandHandler(Handler):
+
+    def match(self, event: 'Message'):
+        if not event.is_command() or event.command() != self.__class__.str_alias():
+            return False
+        return True
+
+
+class GroupChatHandler(Handler):
+
+    def match(self, event: 'Message'):
+        if event.is_command():
+            return False
+        return True

@@ -8,12 +8,12 @@ from holand.i18n import t
 from holand.util import timerange
 from holand.expense import filter_expense
 from .ext import (
-    Handler,
+    CommandHandler,
     Message
 )
 
 
-class SetupCommand(Handler):
+class SetupCommand(CommandHandler):
     def require_auth(self) -> bool:
         return False
 
@@ -44,7 +44,7 @@ class SetupCommand(Handler):
         event.delete()
 
 
-class ReviewCommand(Handler):
+class ReviewCommand(CommandHandler):
     def exec(self, event: Message):
         if len(event.argumentstr()) == 0:
             tr = timerange.from_str('this month')
@@ -80,7 +80,7 @@ class ReviewCommand(Handler):
         event.bot.talks(text=content, parse_mode=telegram.ParseMode.MARKDOWN_V2)
 
 
-class ShortcutCommand(Handler):
+class ShortcutCommand(CommandHandler):
     def exec(self, event: Message):
         event.bot.unpin_all_chat_messages(event.chat.id)
         reply_markup = telegram.InlineKeyboardMarkup([
@@ -91,6 +91,4 @@ class ShortcutCommand(Handler):
                 )
             ]
         ])
-        mess = event.bot.send_message(event.chat.id, 'Web', reply_markup=reply_markup, parse_mode=telegram.ParseMode.HTML)
-        mess.pin(disable_notification=True)
-        event.delete()
+        event.bot.send_message(event.chat.id, 'Web', reply_markup=reply_markup, parse_mode=telegram.ParseMode.HTML)

@@ -10,15 +10,21 @@ from holand.expense import (
 from holand.i18n import t
 from flask import current_app
 from .ext import (
-    Handler,
-    Message,
+    GroupChatHandler,
+    Message
 )
-from .callback import SelectExpenseCategoryCallback, ShowMoreExpenseCategoryCallback
+from .callback import (
+    SelectExpenseCategoryCallback,
+    ShowMoreExpenseCategoryCallback
+)
 
 
-class NewJoinUser(Handler):
-    def require_auth(self) -> bool:
-        return False
+class NewJoinUser(GroupChatHandler):
+
+    def match(self, message: Message) -> bool:
+        if message.new_chat_members is None or len(message.new_chat_members) == 0:
+            return False
+        return super().match(message)
 
     def exec(self, event: Message):
         for us in event.new_chat_members:
@@ -32,7 +38,12 @@ class NewJoinUser(Handler):
             hconfig.set('bot.group_id', str(event.chat.id))
 
 
-class LeftUser(Handler):
+class LeftUser(GroupChatHandler):
+
+    def match(self, message: Message) -> bool:
+        if message.left_chat_member is None:
+            return False
+        return super().match(message)
 
     def exec(self, event: Message):
         u = User.query.filter_by(telegram_userid=event.left_chat_member.id).first()
@@ -41,7 +52,13 @@ class LeftUser(Handler):
             u.save()
 
 
-class AddExpenseItem(Handler):
+class AddExpenseItem(GroupChatHandler):
+
+    def match(self, message: Message):
+        if message.text is None or len(message.text.strip()) == 0:
+            return False
+        return super().match(message)
+
     def exec(self, event: Message):
         if len(event.text) == 0:
             return

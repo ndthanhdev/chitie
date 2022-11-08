@@ -1,18 +1,20 @@
 import os
+import telegram
+import holand.config as hconfig
 
 from flask import Flask, Blueprint, current_app, g, make_response, request, url_for
-from holand.config import get_bulk as config_get_bulk
-from .dispatcher import Dispatcher
-from .ext import Bot
+from holand.auth.user import User
+from holand.i18n import t
+from .dispatcher import chatmessage_handler, callbackquery_handler
+from .ext import Bot, CallbackQuery, Message
 
 
 bot = Bot(os.getenv("TELEGRAM_SECRET"))
 webhook_secret = os.getenv('TELEGRAM_WEBHOOK_SECRET').strip()
-dispatcher = Dispatcher(bot)
 
 
 def _before_webhook_request():
-    configs = config_get_bulk([
+    configs = hconfig.get_bulk([
         'bot.group_id',
         'bot.group_type',
     ])
@@ -21,26 +23,59 @@ def _before_webhook_request():
             current_app.config[path] = int(val)
         else:
             current_app.config[path] = val
+    update = telegram.Update.de_json(request.get_json(), bot)
+    g.user = User.query.filter_by(telegram_userid=update.effective_user.id).first()
 
 
-def listen_webhook_event(secret: str):
+def _setupbot(update: telegram.Update):
+    """
+    Setup when bot is promoted to Administrator of the first group
+    """
+    admin = User.query.first()
+    if admin is not None:
+        return
+    if update.my_chat_member is None:
+        return
+    event = update.my_chat_member
+    if event.new_chat_member.user.id != bot.id:
+        return
+    if event.new_chat_member.status != telegram.ChatMember.ADMINISTRATOR:
+        return
+    if event.chat.type not in [telegram.Chat.GROUP, telegram.Chat.SUPERGROUP]:
+        return
+    hconfig.set('bot.group_id', str(event.chat.id))
+    hconfig.set('bot.group_type', event.chat.type)
+    admin = User(event.from_user.username, event.from_user.id)
+    admin.save()
+    bot.send_message(event.chat.id, text=t('setup done'))
+
+
+def listen_update(secret: str):
     if secret.strip() != webhook_secret:
-        return make_response('Unauthorized!', 401)
-    payload = request.get_json(force=True)
-    if payload is None:
-        return make_response({"status": "Error"}, 400)
+        return make_response('Unauthorized', 401)
+    update = telegram.Update.de_json(request.get_json(), bot)
     try:
-        dispatcher.process(payload)
+        if 'bot.group_id' not in current_app.config:
+            return _setupbot(update)
+
+        if update.callback_query is not None:
+            event = CallbackQuery.de_json(update.callback_query.to_dict(), bot)
+            return callbackquery_handler.process(event)
+        elif update.message is not None:
+            event = Message.de_json(update.message.to_dict(), bot)
+            return chatmessage_handler.process(event)
     except Exception as e:
-        errormsg = str(e)
-        bot.talks(text=f'Error! {errormsg}')
+        import traceback
+        traceback.print_exc()
+        msg = str(e)
+        bot.talks(text=f'Error! {msg}')
     finally:
         return make_response('OK', 200)
 
 
 def init_app(app: Flask):
     botbp = Blueprint('bot', __name__)
-    botbp.add_url_rule("/tlg/<secret>", endpoint='callback', methods=['POST'], view_func=listen_webhook_event)
+    botbp.add_url_rule("/tlg/<secret>", endpoint='callback', methods=['POST'], view_func=listen_update)
     botbp.before_request(_before_webhook_request)
     app.register_blueprint(botbp)
     bot.setWebhook(url_for('bot.callback', _external=True, _scheme='https', secret=os.getenv('TELEGRAM_WEBHOOK_SECRET')))
