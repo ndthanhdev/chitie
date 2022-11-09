@@ -6,7 +6,7 @@ from flask import Flask, Blueprint, current_app, g, make_response, request, url_
 from holand.auth.user import User
 from holand.i18n import t
 from .dispatcher import chatmessage_handler, callbackquery_handler
-from .ext import Bot, CallbackQuery, Message
+from .ext import Bot, CallbackQuery, Message, get_chatcontext
 
 
 bot = Bot(os.getenv("TELEGRAM_SECRET"))
@@ -24,7 +24,8 @@ def _before_webhook_request():
         else:
             current_app.config[path] = val
     update = telegram.Update.de_json(request.get_json(), bot)
-    g.user = User.query.filter_by(telegram_userid=update.effective_user.id).first()
+    if update.message is not None:
+        g.chatcontext = get_chatcontext(update.message)
 
 
 def _setupbot(update: telegram.Update):

@@ -1,11 +1,24 @@
-import re
+import sqlalchemy as sa
 import telegram
+import telegram.error
 
 from abc import abstractmethod
+from holand.i18n import t
+from holand.util import timerange
 from flask import current_app
 from urllib.parse import parse_qs, urlencode
+from typing import Union
+from .chatcontext import Chatcontext
 
-from holand.i18n import t
+
+def get_chatcontext(message: 'Message') -> Union[None, Chatcontext]:
+    tr = timerange.from_str('today')
+    return Chatcontext.query.filter(sa.and_(
+        Chatcontext.created_at >= tr.time_from,
+        Chatcontext.created_at <= tr.time_to)).filter_by(
+            is_active=True,
+            chat_id=message.chat.id,
+            user_id=message.from_user.id).first()
 
 
 class Bot(telegram.Bot):
@@ -103,7 +116,7 @@ class Handler:
         if class_name.endswith('Callback'):
             alias = class_name.removesuffix('Callback')
 
-        return re.sub(r'(?<!^)(?=[A-Z])', '_', alias).lower()
+        return alias.lower()
 
     def require_auth(self) -> bool:
         return True
@@ -127,6 +140,12 @@ class CallbackHandler(Handler):
 class CommandHandler(Handler):
 
     def match(self, event: 'Message'):
+        try:
+            member = event.bot.get_chat_member(current_app.config['bot.group_id'], event.from_user.id)
+            if member.status not in [telegram.ChatMember.MEMBER, telegram.ChatMember.ADMINISTRATOR, telegram.ChatMember.CREATOR]:
+                return False
+        except telegram.error.TelegramError:
+            return False
         if not event.is_command() or event.command() != self.__class__.str_alias():
             return False
         return True
@@ -135,6 +154,8 @@ class CommandHandler(Handler):
 class GroupChatHandler(Handler):
 
     def match(self, event: 'Message'):
+        if event.chat.id != current_app.config['bot.group_id']:
+            return False
         if event.is_command():
             return False
         return True

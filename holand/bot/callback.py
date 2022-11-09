@@ -5,11 +5,16 @@ from holand.expense import (
     ExpenseCategory,
     list_expense_category
 )
+from holand.i18n import t
 from .ext import (
     CallbackQuery,
     CallbackHandler
 )
-from holand.i18n import t
+from .chatcontext import (
+    Chatcontext,
+    EditExpenseCategoryName,
+    AddExpenseCategory
+)
 
 
 class SelectExpenseCategoryCallback(CallbackHandler):
@@ -37,3 +42,92 @@ class ShowMoreExpenseCategoryCallback(CallbackHandler):
         ]
         event.edit_message_text(t('select category'), reply_markup=telegram.InlineKeyboardMarkup(buttons))
         return True
+
+
+class CloseButtonCallback(CallbackHandler):
+
+    def exec(self, event: CallbackHandler):
+        event.delete_message()
+
+
+class ListExpenseCategoryCallback(CallbackHandler):
+
+    def exec(self, event: CallbackQuery):
+        categories = ExpenseCategory.query.order_by(ExpenseCategory.name.asc()).all()
+        buttons = [
+            [
+                telegram.InlineKeyboardButton(
+                    cat.name,
+                    callback_data=ViewDetailExpenseCategoryCallback.build_callback_data(category_id=cat.id))
+            ]
+            for cat in categories
+        ]
+        buttons.append([
+            telegram.InlineKeyboardButton(t('add'), callback_data=AddExpenseCategoryCallback.build_callback_data()),
+            telegram.InlineKeyboardButton(t('close'), callback_data=CloseButtonCallback.build_callback_data()),
+        ])
+        event.edit_message_text(t('expense categories'), reply_markup=telegram.InlineKeyboardMarkup(buttons))
+
+
+class ViewDetailExpenseCategoryCallback(CallbackHandler):
+
+    def exec(self, event: CallbackQuery):
+        args = event.arguments()
+
+        category = ExpenseCategory.query.get(args['category_id'])
+        content = [
+            f"**{category.name}**",
+            "{}: {}".format(t('active'), str(category.is_active))
+        ]
+        buttons = [
+            [
+                telegram.InlineKeyboardButton(
+                    t('change name'),
+                    callback_data=EditExpenseCategoryNameCallback.build_callback_data(category_id=category.id)),
+            ], [
+                telegram.InlineKeyboardButton(
+                    t('deactivate') if category.is_active else t('activate'),
+                    callback_data=ToggleActiveExpenseCategoryCallback.build_callback_data(category_id=category.id))
+            ], [
+                telegram.InlineKeyboardButton(
+                    t('back'),
+                    callback_data=ListExpenseCategoryCallback.build_callback_data())
+            ]
+        ]
+        event.edit_message_text("\n".join(content), reply_markup=telegram.InlineKeyboardMarkup(buttons), parse_mode=telegram.ParseMode.MARKDOWN_V2)
+
+
+class ToggleActiveExpenseCategoryCallback(CallbackHandler):
+
+    def exec(self, event: CallbackQuery):
+        args = event.arguments()
+        category = ExpenseCategory.query.get(args['category_id'])
+        category.is_active = True if not category.is_active else False
+        category.save()
+
+        content = [
+            f"**{category.name}**",
+            "{}: {}".format(t('active'), str(category.is_active))
+        ]
+        buttons = [
+            [telegram.InlineKeyboardButton(t('back'), callback_data=ListExpenseCategoryCallback.build_callback_data())],
+            [telegram.InlineKeyboardButton(t('close'), callback_data=CloseButtonCallback.build_callback_data())]
+        ]
+        event.edit_message_text("\n".join(content), reply_markup=telegram.InlineKeyboardMarkup(buttons), parse_mode=telegram.ParseMode.MARKDOWN_V2)
+
+
+class EditExpenseCategoryNameCallback(CallbackHandler):
+
+    def exec(self, event: 'CallbackQuery'):
+        args = event.arguments()
+        chat_id = event.message.chat.id
+        Chatcontext.new(event.message.chat.id, event.from_user.id, EditExpenseCategoryName, **args)
+        event.bot.send_message(chat_id, t('enter new name'))
+
+
+class AddExpenseCategoryCallback(CallbackHandler):
+
+    def exec(self, event: 'CallbackQuery'):
+        chat_id = event.message.chat.id
+        Chatcontext.new(event.message.chat.id, event.from_user.id, AddExpenseCategory)
+        event.bot.send_message(chat_id, t('enter category name'))

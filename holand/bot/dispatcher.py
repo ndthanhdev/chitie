@@ -1,17 +1,25 @@
 from typing import List
 from .callback import (
     SelectExpenseCategoryCallback,
-    ShowMoreExpenseCategoryCallback
+    ShowMoreExpenseCategoryCallback,
+    ViewDetailExpenseCategoryCallback,
+    ToggleActiveExpenseCategoryCallback,
+    ListExpenseCategoryCallback,
+    EditExpenseCategoryNameCallback,
+    CloseButtonCallback,
+    AddExpenseCategoryCallback,
 )
 from .command import (
     SetupCommand,
     ReviewCommand,
-    ShortcutCommand
+    ShortcutCommand,
+    ExpenseCategoryCommand
 )
 from .ext import Handler
 from .group import (
     NewJoinUser,
     LeftUser,
+    CommandInputContext,
     AddExpenseItem
 )
 
@@ -27,11 +35,19 @@ chatmessage_handler = _build_chain(
     SetupCommand(),
     ReviewCommand(),
     ShortcutCommand(),
+    ExpenseCategoryCommand(),
     NewJoinUser(),
     LeftUser(),
+    CommandInputContext(),
     AddExpenseItem()
 )
 callbackquery_handler = _build_chain(
     SelectExpenseCategoryCallback(),
-    ShowMoreExpenseCategoryCallback()
+    ShowMoreExpenseCategoryCallback(),
+    ViewDetailExpenseCategoryCallback(),
+    ToggleActiveExpenseCategoryCallback(),
+    ListExpenseCategoryCallback(),
+    CloseButtonCallback(),
+    AddExpenseCategoryCallback(),
+    EditExpenseCategoryNameCallback(),
 )

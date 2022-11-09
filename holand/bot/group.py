@@ -8,7 +8,7 @@ from holand.expense import (
     list_expense_category
 )
 from holand.i18n import t
-from flask import current_app
+from flask import current_app, g
 from .ext import (
     GroupChatHandler,
     Message
@@ -52,10 +52,21 @@ class LeftUser(GroupChatHandler):
             u.save()
 
 
+class CommandInputContext(GroupChatHandler):
+
+    def match(self, message: 'Message') -> bool:
+        if 'chatcontext' in g and g.chatcontext is None:
+            return False
+        return super().match(message)
+
+    def exec(self, event: Message):
+        g.chatcontext.process(event)
+
+
 class AddExpenseItem(GroupChatHandler):
 
     def match(self, message: Message):
-        if message.text is None or len(message.text.strip()) == 0:
+        if 'chatcontext' in g and g.chatcontext is not None:
             return False
         return super().match(message)
 

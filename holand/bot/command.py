@@ -6,10 +6,18 @@ import holand.auth.user as user
 from flask import url_for
 from holand.i18n import t
 from holand.util import timerange
-from holand.expense import filter_expense
+from holand.expense import (
+    ExpenseCategory,
+    filter_expense
+)
 from .ext import (
     CommandHandler,
     Message
+)
+from .callback import (
+    ViewDetailExpenseCategoryCallback,
+    AddExpenseCategoryCallback,
+    CloseButtonCallback,
 )
 
 
@@ -92,3 +100,22 @@ class ShortcutCommand(CommandHandler):
             ]
         ])
         event.bot.send_message(event.chat.id, 'Web', reply_markup=reply_markup, parse_mode=telegram.ParseMode.HTML)
+
+
+class ExpenseCategoryCommand(CommandHandler):
+
+    def exec(self, event: 'Message'):
+        categories = ExpenseCategory.query.order_by(ExpenseCategory.name.asc()).all()
+        buttons = [
+            [
+                telegram.InlineKeyboardButton(
+                    cat.name,
+                    callback_data=ViewDetailExpenseCategoryCallback.build_callback_data(category_id=cat.id))
+            ]
+            for cat in categories
+        ]
+        buttons.append([
+            telegram.InlineKeyboardButton(t('add'), callback_data=AddExpenseCategoryCallback.build_callback_data()),
+            telegram.InlineKeyboardButton(t('close'), callback_data=CloseButtonCallback.build_callback_data())
+        ])
+        event.bot.send_message(event.chat.id, t('expense categories'), reply_markup=telegram.InlineKeyboardMarkup(buttons))
