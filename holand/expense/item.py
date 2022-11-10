@@ -22,9 +22,10 @@ class Item(connection.Model, ActiveRecord):
     transaction_type = sa.Column(sa.String, nullable=False)
     telegram_message_id = sa.Column(sa.Integer, nullable=True)
     updated_at = sa.Column(sa.DateTime, nullable=True)
-    created_at = sa.Column(sa.DateTime, nullable=True)
+    created_at = sa.Column(sa.DateTime, nullable=False)
 
     def save(self):
+        self.amount = float(self.amount)
         if self.amount <= 0 or len(self.subject) == 0:
             raise ExpenseItemIsInvalid
         super().save()
@@ -68,27 +69,3 @@ class Item(connection.Model, ActiveRecord):
 
     def is_credit(self) -> bool:
         return self.transaction_type == TRANSACTION_TYPE_CREDIT
-
-
-def filter(conditions, order_by_column=None, order_type="asc"):
-    query = Item.query
-    if 'time_from' in conditions and 'time_to' in conditions:
-        query = query.filter(sa.and_(
-            Item.created_at >= conditions['time_from'],
-            Item.created_at <= conditions['time_to']
-        ))
-        del conditions['time_from']
-        del conditions['time_to']
-
-    for key in conditions:
-        if not hasattr(Item, key) or conditions[key] is None or len(str(conditions[key])) == 0:
-            continue
-        query = query.filter(getattr(Item, key) == conditions[key])
-
-    if order_by_column is not None:
-        if order_type == "asc":
-            query = query.order_by(getattr(Item, order_by_column).asc())
-        elif order_type == "desc":
-            query = query.order_by(getattr(Item, order_by_column).desc())
-
-    return query.all()

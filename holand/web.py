@@ -2,13 +2,33 @@ import collections
 import hashlib
 import holand.config as hconfig
 import hmac
+import json
+import sqlalchemy as sa
 import telegram
 import telegram.error
 
 from holand.bot import bot
-from flask import Flask, Blueprint, abort, current_app, flash, g, redirect, render_template, request, session, url_for
+from flask import (
+    Flask,
+    Blueprint,
+    abort,
+    current_app,
+    flash,
+    g,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for
+)
 from urllib.parse import unquote
 from .auth import user
+from .expense import (
+    ExpenseCategory,
+    ExpenseItem,
+    filter_expense
+)
+from .util import timerange
 
 
 def _load_auth():
@@ -16,18 +36,6 @@ def _load_auth():
         g.user = user.find_by_id(session.get('user_id'))
     else:
         g.user = None
-
-
-def login_required(view):
-    def wrapped_view(**kwargs):
-        if g.user is None:
-            return redirect(url_for('web.login'))
-        return view(**kwargs)
-    return wrapped_view
-
-
-def index():
-    return render_template('index.html')
 
 
 def login():
@@ -60,9 +68,75 @@ def telegram_auth():
     return redirect(url_for('web.index'))
 
 
+def login_required(view):
+    def wrapped_view(**kwargs):
+        if g.user is None:
+            return redirect(url_for('web.login'))
+        return view(**kwargs)
+    return wrapped_view
+
+
+def index():
+    tr = timerange.from_str(timerange.THIS_MONTH)
+    items = ExpenseItem.query.filter(sa.and_(
+        ExpenseItem.created_at >= tr.time_from,
+        ExpenseItem.created_at <= tr.time_to
+    )).all()
+    group_by_cate = {}
+    for item in items:
+        if item.category_id not in group_by_cate:
+            group_by_cate.setdefault(item.category_id, 0)
+        group_by_cate[item.category_id] = group_by_cate[item.category_id] + item.amount
+    categories = ExpenseCategory.query.filter(ExpenseCategory.id.in_(group_by_cate.keys())).all()
+    chartdata = {}
+    for cate in categories:
+        chartdata.setdefault(cate.name, group_by_cate[cate.id])
+    view_detail_url = url_for('web.list_expenses', time_from=tr.time_from.isoformat(), time_to=tr.time_to.isoformat())
+    return render_template('index.html', chartdata=json.dumps(chartdata), view_detail_url=view_detail_url)
+
+
+def list_expenses():
+    expenses = filter_expense({
+        'time_from': request.args.get('time_from', None),
+        'time_to': request.args.get('time_to', None),
+        'category_id': request.args.get('category_id', None),
+    }, order_by_column='created_at', order_type='desc')
+    return render_template('list_expenses.html', expenses=expenses)
+
+
+def detail_expense(expense_id):
+    expense = ExpenseItem.query.get(expense_id)
+    categories = ExpenseCategory.query.all()
+    errors = []
+    if request.method == 'POST':
+        update_info = {
+            'subject': request.form.get('subject'),
+            'amount': request.form.get('amount'),
+            'category_id': request.form.get('category_id'),
+            'transaction_type': request.form.get('transaction_type'),
+        }
+        for key, value in update_info.items():
+            if value is None or len(value) == 0:
+                errors.append(f'Invalid value for field *{key}*')
+                continue
+            setattr(expense, key, value)
+        print(update_info)
+        print([cate.id for cate in categories])
+        print(expense.category_id)
+        if int(expense.category_id) not in [cate.id for cate in categories]:
+            errors.append('Invalid category')
+        if len(errors) == 0:
+            expense.save()
+            return redirect(url_for('web.list_expenses'))
+
+    return render_template('detail_expense.html', expense=expense, categories=categories, errors=errors)
+
+
 def init_app(app: Flask):
     web = Blueprint('web', __name__)
     web.add_url_rule('/', endpoint='index', view_func=login_required(index))
+    web.add_url_rule('/expenses', endpoint='list_expenses', view_func=login_required(list_expenses))
+    web.add_url_rule('/expenses/<expense_id>', endpoint='detail_expense', methods=['GET', 'POST'], view_func=login_required(detail_expense))
     web.add_url_rule('/login', endpoint='login', view_func=login)
     web.add_url_rule('/tauth', endpoint='telegram_auth', view_func=telegram_auth)
     web.before_request(_load_auth)

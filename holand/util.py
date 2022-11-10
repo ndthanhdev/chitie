@@ -4,6 +4,9 @@ from calendar import monthrange
 
 class timerange:
 
+    THIS_MONTH = 'this month'
+    TODAY = 'today'
+
     def __init__(self, time_from=None, time_to=None):
         self.time_from = time_from
         self.time_to = time_to

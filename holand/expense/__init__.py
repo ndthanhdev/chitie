@@ -4,10 +4,11 @@ __all__ = [
     'filter_expense',
     'list_expense_category'
 ]
+import datetime
+import sqlalchemy as sa
 
 from .item import (
     Item as ExpenseItem,
-    filter as filter_expense
 )
 from .category import (
     Category as ExpenseCategory,
@@ -29,3 +30,46 @@ def list_expense_category(subject: str = ''):
     else:
         categories = ExpenseCategory.query.filter_by(is_active=True).all()
     return categories, optimized
+
+
+def filter_expense(conditions: dict, order_by_column=None, order_type="asc"):
+    query = ExpenseItem.query
+    if conditions.get('time_from') is not None and conditions.get('time_to') is not None:
+        query = query.filter(sa.and_(
+            ExpenseItem.created_at >= conditions['time_from'],
+            ExpenseItem.created_at <= conditions['time_to']
+        ))
+        del conditions['time_from']
+        del conditions['time_to']
+
+    for key in conditions:
+        if not hasattr(ExpenseItem, key) or conditions[key] is None or len(str(conditions[key])) == 0:
+            continue
+        query = query.filter(getattr(ExpenseItem, key) == conditions[key])
+
+    if order_by_column is not None:
+        if order_type == "asc":
+            query = query.order_by(getattr(ExpenseItem, order_by_column).asc())
+        elif order_type == "desc":
+            query = query.order_by(getattr(ExpenseItem, order_by_column).desc())
+
+    expense_items = query.all()
+    category_ids = list(set(map(lambda item: item.category_id, expense_items)))
+    categories = ExpenseCategory.query.filter(ExpenseCategory.id.in_(category_ids)).all()
+    category_map = {}
+    for cate in categories:
+        category_map.setdefault(cate.id, cate.name)
+
+    result = []
+    for item in expense_items:
+        tmpdict = {}
+        for attr, value in item.__dict__.items():
+            if attr.startswith('_'):
+                continue
+            if isinstance(value, datetime.datetime):
+                value = value.isoformat()
+            tmpdict.setdefault(attr, value)
+        tmpdict.setdefault('category_name', category_map[item.category_id])
+        result.append(tmpdict)
+
+    return result

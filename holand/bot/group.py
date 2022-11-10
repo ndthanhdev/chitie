@@ -68,11 +68,11 @@ class AddExpenseItem(GroupChatHandler):
     def match(self, message: Message):
         if 'chatcontext' in g and g.chatcontext is not None:
             return False
+        if message.text is None or len(message.text.strip()) == 0:
+            return False
         return super().match(message)
 
     def exec(self, event: Message):
-        if len(event.text) == 0:
-            return
         try:
             item = ExpenseItem.from_text(event.text)
             item.telegram_message_id = event.message_id
