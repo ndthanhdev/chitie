@@ -1,12 +1,12 @@
 import os
 import telegram
-import holand.config as holand_config
-import holand.auth.user as user
+import chitie.config as chitie_config
+import chitie.auth.user as user
 
 from flask import url_for
-from holand.i18n import t
-from holand.util import timerange
-from holand.expense import (
+from chitie.i18n import t
+from chitie.util import timerange
+from chitie.expense import (
     ExpenseCategory,
     filter_expense
 )
@@ -36,8 +36,8 @@ class SetupCommand(CommandHandler):
                 return
             admin = user.User(event.from_user.username, event.from_user.id)
             admin.save()
-        holand_config.set('bot.group_id', str(event.chat.id))
-        holand_config.set('bot.group_type', event.chat.type)
+        chitie_config.set('bot.group_id', str(event.chat.id))
+        chitie_config.set('bot.group_type', event.chat.type)
         reply_markup = telegram.InlineKeyboardMarkup([
             [
                 telegram.InlineKeyboardButton(

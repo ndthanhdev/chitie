@@ -1,9 +1,10 @@
 import sqlalchemy as sa
-import holand.channel
+import chitie.channel
 
-from holand.db import connection, ActiveRecord
-from holand.exceptions import ExpenseItemIsInvalid
-from holand.util import is_number
+from chitie.db import connection, ActiveRecord
+from chitie.exceptions import ExpenseItemIsInvalid
+from chitie.util import is_number
+from .category import Category
 
 
 TRANSACTION_TYPE_CREDIT = "credit"
@@ -54,8 +55,8 @@ class Item(connection.Model, ActiveRecord):
     def update_category(self, category_id: int):
         self.category_id = category_id
         self.save()
-        holand.channel.notify(
-            holand.channel.CHANNEL_EXPENSE_ITEM_CATEGORY_UPDATE,
+        chitie.channel.notify(
+            chitie.channel.CHANNEL_EXPENSE_ITEM_CATEGORY_UPDATE,
             {
                 'id': self.id,
                 'subject': self.subject,
@@ -69,3 +70,7 @@ class Item(connection.Model, ActiveRecord):
 
     def is_credit(self) -> bool:
         return self.transaction_type == TRANSACTION_TYPE_CREDIT
+
+    def set_category(self, category: 'Category'):
+        self.category_name = category.name
+        self._category = category

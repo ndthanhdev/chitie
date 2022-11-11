@@ -26,3 +26,13 @@ class ActiveRecord:
         if hasattr(self, 'id') and getattr(self, 'id') is None:
             return True
         return False
+
+    def to_dict(self) -> dict:
+        dictt = {}
+        for key, value in self.__dict__.items():
+            if key.startswith('_'):
+                continue
+            if isinstance(value, datetime):
+                value = value.isoformat()
+            dictt.setdefault(key, value)
+        return dictt

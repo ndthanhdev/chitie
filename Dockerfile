@@ -11,7 +11,7 @@ RUN python -m pip install -e ".[production]" && \
 
 COPY config.py .
 COPY wsgi.py .
-COPY holand ./holand
+COPY chitie ./chitie
 COPY lang ./lang
 
 COPY docker/crontab /var/spool/cron/crontabs/root

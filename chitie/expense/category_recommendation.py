@@ -1,9 +1,9 @@
 import re
 import sqlalchemy as sa
-import holand.channel
+import chitie.channel
 
 from flask import current_app
-from holand.db import connection, ActiveRecord
+from chitie.db import connection, ActiveRecord
 
 
 class CategoryRecommendation(connection.Model, ActiveRecord):
@@ -50,10 +50,10 @@ def get_category_id_by_subject(subject: str):
 
 def listen_item_category_update():
     def handler(payload: dict):
-        current_app.logger.info(str(payload), channel=holand.channel.CHANNEL_EXPENSE_ITEM_CATEGORY_UPDATE)
+        current_app.logger.info(str(payload), channel=chitie.channel.CHANNEL_EXPENSE_ITEM_CATEGORY_UPDATE)
         count_word_hit_with_category(payload['subject'], payload['category_id'])
 
-    holand.channel.listen(
-        holand.channel.CHANNEL_EXPENSE_ITEM_CATEGORY_UPDATE,
+    chitie.channel.listen(
+        chitie.channel.CHANNEL_EXPENSE_ITEM_CATEGORY_UPDATE,
         handler
     )

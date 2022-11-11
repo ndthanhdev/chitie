@@ -1,13 +1,13 @@
 import collections
 import hashlib
-import holand.config as hconfig
+import chitie.config as hconfig
 import hmac
 import json
 import sqlalchemy as sa
 import telegram
 import telegram.error
 
-from holand.bot import bot
+from chitie.bot import bot
 from flask import (
     Flask,
     Blueprint,
@@ -101,7 +101,7 @@ def list_expenses():
         'time_to': request.args.get('time_to', None),
         'category_id': request.args.get('category_id', None),
     }, order_by_column='created_at', order_type='desc')
-    return render_template('list_expenses.html', expenses=expenses)
+    return render_template('list_expenses.html', expenses=list(map(lambda e: e.to_dict(), expenses)))
 
 
 def detail_expense(expense_id):
@@ -120,9 +120,6 @@ def detail_expense(expense_id):
                 errors.append(f'Invalid value for field *{key}*')
                 continue
             setattr(expense, key, value)
-        print(update_info)
-        print([cate.id for cate in categories])
-        print(expense.category_id)
         if int(expense.category_id) not in [cate.id for cate in categories]:
             errors.append('Invalid category')
         if len(errors) == 0:

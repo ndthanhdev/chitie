@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 import uuid
 
-from holand.db import connection, ActiveRecord
+from chitie.db import connection, ActiveRecord
 
 
 class User(connection.Model, ActiveRecord):

@@ -1,13 +1,13 @@
 import telegram
-import holand.config as hconfig
+import chitie.config as hconfig
 
-from holand.auth.user import User
-from holand.exceptions import ExpenseItemIsInvalid
-from holand.expense import (
+from chitie.auth.user import User
+from chitie.exceptions import ExpenseItemIsInvalid
+from chitie.expense import (
     ExpenseItem,
     list_expense_category
 )
-from holand.i18n import t
+from chitie.i18n import t
 from flask import current_app, g
 from .ext import (
     GroupChatHandler,

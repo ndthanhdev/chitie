@@ -3,8 +3,8 @@ import telegram
 import telegram.error
 
 from abc import abstractmethod
-from holand.i18n import t
-from holand.util import timerange
+from chitie.i18n import t
+from chitie.util import timerange
 from flask import current_app
 from urllib.parse import parse_qs, urlencode
 from typing import Union

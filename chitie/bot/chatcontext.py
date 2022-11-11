@@ -3,9 +3,9 @@ import importlib
 import inspect
 import sqlalchemy as sa
 
-from holand.db import connection, ActiveRecord
-from holand.expense import ExpenseCategory
-from holand.i18n import t
+from chitie.db import connection, ActiveRecord
+from chitie.expense import ExpenseCategory
+from chitie.i18n import t
 from telegram import Message
 
 

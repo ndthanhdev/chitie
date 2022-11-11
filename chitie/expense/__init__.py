@@ -58,18 +58,11 @@ def filter_expense(conditions: dict, order_by_column=None, order_type="asc"):
     categories = ExpenseCategory.query.filter(ExpenseCategory.id.in_(category_ids)).all()
     category_map = {}
     for cate in categories:
-        category_map.setdefault(cate.id, cate.name)
+        category_map.setdefault(cate.id, cate)
 
     result = []
     for item in expense_items:
-        tmpdict = {}
-        for attr, value in item.__dict__.items():
-            if attr.startswith('_'):
-                continue
-            if isinstance(value, datetime.datetime):
-                value = value.isoformat()
-            tmpdict.setdefault(attr, value)
-        tmpdict.setdefault('category_name', category_map[item.category_id])
-        result.append(tmpdict)
+        item.set_category(category_map[item.category_id])
+        result.append(item)
 
     return result

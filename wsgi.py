@@ -1,4 +1,4 @@
-from app import create_app
+from chitie import create_app
 
 webserver = create_app()
 

@@ -2,7 +2,7 @@ import sqlalchemy as sa
 
 from flask import Flask
 from datetime import datetime
-from holand.db import connection, ActiveRecord
+from chitie.db import connection, ActiveRecord
 
 
 class Config(connection.Model, ActiveRecord):

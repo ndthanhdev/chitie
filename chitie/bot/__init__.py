@@ -1,10 +1,10 @@
 import os
 import telegram
-import holand.config as hconfig
+import chitie.config as hconfig
 
 from flask import Flask, Blueprint, current_app, g, make_response, request, url_for
-from holand.auth.user import User
-from holand.i18n import t
+from chitie.auth.user import User
+from chitie.i18n import t
 from .dispatcher import chatmessage_handler, callbackquery_handler
 from .ext import Bot, CallbackQuery, Message, get_chatcontext
 

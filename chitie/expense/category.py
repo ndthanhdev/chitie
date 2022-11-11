@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 
 from click import echo
-from holand.db import connection, ActiveRecord
+from chitie.db import connection, ActiveRecord
 
 
 class Category(connection.Model, ActiveRecord):

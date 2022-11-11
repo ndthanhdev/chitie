@@ -1,11 +1,11 @@
 import telegram
 
-from holand.expense import (
+from chitie.expense import (
     ExpenseItem,
     ExpenseCategory,
     list_expense_category
 )
-from holand.i18n import t
+from chitie.i18n import t
 from .ext import (
     CallbackQuery,
     CallbackHandler
