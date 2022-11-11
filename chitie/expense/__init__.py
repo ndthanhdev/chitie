@@ -2,34 +2,31 @@ __all__ = [
     'ExpenseCategory',
     'ExpenseItem',
     'filter_expense',
-    'list_expense_category'
+    'recommend_expense_category'
 ]
+import datedelta
 import datetime
 import sqlalchemy as sa
 
+from chitie.i18n import t
 from .item import (
     Item as ExpenseItem,
 )
 from .category import (
     Category as ExpenseCategory,
 )
-from .category_recommendation import (
-    get_category_id_by_subject
-)
 
 
-def list_expense_category(subject: str = ''):
-    optimized = False
-    if len(subject) > 0:
-        category_ids = get_category_id_by_subject(subject)
-        if len(category_ids) > 0:
-            categories = ExpenseCategory.query.filter(ExpenseCategory.id.in_(category_ids)).all()
-            optimized = True
-        else:
-            categories = ExpenseCategory.query.filter_by(is_active=True).all()
-    else:
-        categories = ExpenseCategory.query.filter_by(is_active=True).all()
-    return categories, optimized
+def recommend_expense_category(subject: str):
+    first_word = subject.split(' ')[0]
+    search_from = datetime.datetime.now() - (5 * datedelta.WEEK)
+    query = ExpenseItem.query.with_entities(ExpenseItem.category_id)
+    query = query.filter(ExpenseItem.subject.like(f'%{first_word}%'))
+    query = query.filter(ExpenseItem.created_at >= search_from.replace(hour=0, minute=0, second=0)).group_by(ExpenseItem.category_id)
+    histories = query.limit(5).all()
+    if len(histories) == 0 or histories[0][0] is None:
+        return ExpenseCategory.query.filter_by(is_active=True).all(), False
+    return ExpenseCategory.query.filter(ExpenseCategory.id.in_([item[0] for item in histories])).all(), True
 
 
 def filter_expense(conditions: dict, order_by_column=None, order_type="asc"):
@@ -62,7 +59,11 @@ def filter_expense(conditions: dict, order_by_column=None, order_type="asc"):
 
     result = []
     for item in expense_items:
-        item.set_category(category_map[item.category_id])
+        if item.category_id is not None:
+            item.set_category(category_map[item.category_id])
+        else:
+            item.category_name = t('unknown')
+            item.category_id = 0
         result.append(item)
 
     return result

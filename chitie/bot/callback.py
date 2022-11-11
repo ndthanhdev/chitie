@@ -3,9 +3,9 @@ import telegram
 from chitie.expense import (
     ExpenseItem,
     ExpenseCategory,
-    list_expense_category
 )
 from chitie.i18n import t
+from telegram.utils.helpers import escape_markdown
 from .ext import (
     CallbackQuery,
     CallbackHandler
@@ -31,7 +31,7 @@ class ShowMoreExpenseCategoryCallback(CallbackHandler):
     def exec(self, event: CallbackQuery):
         args = event.arguments()
 
-        categories, _ = list_expense_category()
+        categories = ExpenseCategory.query.filter_by(is_active=True).all()
         buttons = [
             [
                 telegram.InlineKeyboardButton(
@@ -40,6 +40,11 @@ class ShowMoreExpenseCategoryCallback(CallbackHandler):
             ]
             for category in categories
         ]
+        buttons.append([
+            telegram.InlineKeyboardButton(
+                t('add'),
+                callback_data=AddExpenseCategoryCallback.build_callback_data(item_id=args['item_id']))
+        ])
         event.edit_message_text(t('select category'), reply_markup=telegram.InlineKeyboardMarkup(buttons))
         return True
 
@@ -76,7 +81,7 @@ class ViewDetailExpenseCategoryCallback(CallbackHandler):
 
         category = ExpenseCategory.query.get(args['category_id'])
         content = [
-            f"**{category.name}**",
+            f"{category.name}",
             "{}: {}".format(t('active'), str(category.is_active))
         ]
         buttons = [
@@ -94,7 +99,7 @@ class ViewDetailExpenseCategoryCallback(CallbackHandler):
                     callback_data=ListExpenseCategoryCallback.build_callback_data())
             ]
         ]
-        event.edit_message_text("\n".join(content), reply_markup=telegram.InlineKeyboardMarkup(buttons), parse_mode=telegram.ParseMode.MARKDOWN_V2)
+        event.edit_message_text(escape_markdown("\n".join(content)), reply_markup=telegram.InlineKeyboardMarkup(buttons), parse_mode=telegram.ParseMode.MARKDOWN_V2)
 
 
 class ToggleActiveExpenseCategoryCallback(CallbackHandler):
@@ -120,14 +125,13 @@ class EditExpenseCategoryNameCallback(CallbackHandler):
 
     def exec(self, event: 'CallbackQuery'):
         args = event.arguments()
-        chat_id = event.message.chat.id
         Chatcontext.new(event.message.chat.id, event.from_user.id, EditExpenseCategoryName, **args)
-        event.bot.send_message(chat_id, t('enter new name'))
+        event.edit_message_text(t('enter new name'))
 
 
 class AddExpenseCategoryCallback(CallbackHandler):
 
     def exec(self, event: 'CallbackQuery'):
-        chat_id = event.message.chat.id
-        Chatcontext.new(event.message.chat.id, event.from_user.id, AddExpenseCategory)
-        event.bot.send_message(chat_id, t('enter category name'))
+        args = event.arguments()
+        Chatcontext.new(event.message.chat.id, event.from_user.id, AddExpenseCategory, **args)
+        event.edit_message_text(t('enter category name'))

@@ -7,10 +7,9 @@ setup(
     include_package_data=True,
     install_requires=[
         "alembic",
+        "datedelta",
         "Flask",
-        "Flask-JWT-Extended",
         "Flask-SQLAlchemy",
-        "flask-cors",
         "python-dateutil",
         "python-dotenv",
         "python-telegram-bot",

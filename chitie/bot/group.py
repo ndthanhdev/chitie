@@ -5,7 +5,7 @@ from chitie.auth.user import User
 from chitie.exceptions import ExpenseItemIsInvalid
 from chitie.expense import (
     ExpenseItem,
-    list_expense_category
+    recommend_expense_category,
 )
 from chitie.i18n import t
 from flask import current_app, g
@@ -15,7 +15,8 @@ from .ext import (
 )
 from .callback import (
     SelectExpenseCategoryCallback,
-    ShowMoreExpenseCategoryCallback
+    ShowMoreExpenseCategoryCallback,
+    AddExpenseCategoryCallback
 )
 
 
@@ -81,20 +82,35 @@ class AddExpenseItem(GroupChatHandler):
             event.bot.send_message(event.chat.id, t('invalid format'))
             return
 
-        categories, op = list_expense_category(item.subject)
-        buttons = [
-            [
-                telegram.InlineKeyboardButton(
-                    f"{category.name}",
-                    callback_data=SelectExpenseCategoryCallback.build_callback_data(item_id=item.id, category_id=category.id))
+        categories, op = recommend_expense_category(item.subject)
+        if len(categories) > 0:
+            buttons = [
+                [
+                    telegram.InlineKeyboardButton(
+                        f"{category.name}",
+                        callback_data=SelectExpenseCategoryCallback.build_callback_data(item_id=item.id, category_id=category.id))
+                ]
+                for category in categories
             ]
-            for category in categories
-        ]
-        if op:
-            buttons.append([
-                telegram.InlineKeyboardButton(
-                    "...",
-                    callback_data=ShowMoreExpenseCategoryCallback.build_callback_data(item_id=item.id))
-            ])
+            if op:
+                buttons.append([
+                    telegram.InlineKeyboardButton(
+                        "...",
+                        callback_data=ShowMoreExpenseCategoryCallback.build_callback_data(item_id=item.id))
+                ])
+            else:
+                buttons.append([
+                    telegram.InlineKeyboardButton(
+                        t('add'),
+                        callback_data=AddExpenseCategoryCallback.build_callback_data(item_id=item.id))
+                ])
+        else:
+            buttons = [
+                [
+                    telegram.InlineKeyboardButton(
+                        t('add'),
+                        callback_data=AddExpenseCategoryCallback.build_callback_data(item_id=item.id))
+                ]
+            ]
         event.bot.send_message(event.chat.id, t('select category'), reply_markup=telegram.InlineKeyboardMarkup(buttons))
         pass

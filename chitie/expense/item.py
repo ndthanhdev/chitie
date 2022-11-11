@@ -1,5 +1,4 @@
 import sqlalchemy as sa
-import chitie.channel
 
 from chitie.db import connection, ActiveRecord
 from chitie.exceptions import ExpenseItemIsInvalid
@@ -55,15 +54,6 @@ class Item(connection.Model, ActiveRecord):
     def update_category(self, category_id: int):
         self.category_id = category_id
         self.save()
-        chitie.channel.notify(
-            chitie.channel.CHANNEL_EXPENSE_ITEM_CATEGORY_UPDATE,
-            {
-                'id': self.id,
-                'subject': self.subject,
-                'amount': self.amount,
-                'category_id': self.category_id
-            }
-        )
 
     def is_debit(self) -> bool:
         return self.transaction_type == TRANSACTION_TYPE_DEBIT
@@ -72,5 +62,6 @@ class Item(connection.Model, ActiveRecord):
         return self.transaction_type == TRANSACTION_TYPE_CREDIT
 
     def set_category(self, category: 'Category'):
+        self.category_id = category.id
         self.category_name = category.name
         self._category = category

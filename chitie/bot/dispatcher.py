@@ -13,7 +13,8 @@ from .command import (
     SetupCommand,
     ReviewCommand,
     ShortcutCommand,
-    ExpenseCategoryCommand
+    ExpenseCategoryCommand,
+    CancelCommand
 )
 from .ext import Handler
 from .group import (
@@ -36,6 +37,7 @@ chatmessage_handler = _build_chain(
     ReviewCommand(),
     ShortcutCommand(),
     ExpenseCategoryCommand(),
+    CancelCommand(),
     NewJoinUser(),
     LeftUser(),
     CommandInputContext(),

@@ -3,7 +3,7 @@ import telegram
 import chitie.config as chitie_config
 import chitie.auth.user as user
 
-from flask import url_for
+from flask import url_for, g
 from chitie.i18n import t
 from chitie.util import timerange
 from chitie.expense import (
@@ -119,3 +119,11 @@ class ExpenseCategoryCommand(CommandHandler):
             telegram.InlineKeyboardButton(t('close'), callback_data=CloseButtonCallback.build_callback_data())
         ])
         event.bot.send_message(event.chat.id, t('expense categories'), reply_markup=telegram.InlineKeyboardMarkup(buttons))
+
+
+class CancelCommand(CommandHandler):
+    def exec(self, event: 'Message'):
+        if 'chatcontext' in g and g.chatcontext is not None:
+            chatcontext = g.chatcontext
+            chatcontext.is_active = False
+            chatcontext.save()

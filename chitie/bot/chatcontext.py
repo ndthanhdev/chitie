@@ -4,7 +4,7 @@ import inspect
 import sqlalchemy as sa
 
 from chitie.db import connection, ActiveRecord
-from chitie.expense import ExpenseCategory
+from chitie.expense import ExpenseCategory, ExpenseItem
 from chitie.i18n import t
 from telegram import Message
 
@@ -106,3 +106,10 @@ class AddExpenseCategory(ContextHandler):
             raise ValueError(t('name existed, try another one'))
         cate = ExpenseCategory(name)
         cate.save()
+        if hasattr(self, 'item_id'):
+            item = ExpenseItem.query.get(self.item_id)
+            item.update_category(cate.id)
+            message.bot.send_message(message.chat.id, f"{item.subject} > {cate.name}")
+        else:
+            categories = ExpenseCategory.query.order(ExpenseCategory.name.asc()).all()
+            message.bot.send_message(message.chat.id, "\n".join(["Categories:"] + [f"- {cate.name}" for cate in categories]))
