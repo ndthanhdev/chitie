@@ -43,6 +43,8 @@ Link your domain to the bot
 
 
 Set following environment on your server
+
+
 | Property                | Example                                          | Description                                                  |
 |-------------------------|--------------------------------------------------|--------------------------------------------------------------|
 | DB_URL                  | postgresql://user:passwrod@localhost:5432/chitie | PostgreSQL connection url                                    |
@@ -59,6 +61,26 @@ pip install -e '.[production]'
 uwsgi --enable-threads --socket 0.0.0.0:5000 --protocol http -w wsgi:webserver
 ```
 
+# Usage
+
+
+Message structure
+
+```
+<expense subject: string> <amount: float><transaction_type:enum(‘’, ‘c’)>
+```
+
+There are two types of transactions – debit & credit. In a logging message, if the transaction type is empty, the default value is debit, and if the amount pattern is followed with a c letter, the transaction type is credit.
+
+Example:
+
+Debit expense:
+
+<img src="/chitie/assets/debit_expense.png"/>
+
+Credit expense:
+
+<img src="/chitie/assets/credit_expense.png"/>
 
 # Demo
 Init the expense chat group
