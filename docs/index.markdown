@@ -15,19 +15,19 @@ Your data is secured on your server, which is very flexible as you can write you
 [# View demo](#demo)
 
 
-# Build with
+## Build with
 
 * ![Flask](https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white)
 * ![Vue.js](https://img.shields.io/badge/vuejs-%2335495e.svg?style=for-the-badge&logo=vuedotjs&logoColor=%234FC08D)
 * ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
 * ![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)
 
-# Setup on your server
-## Prerequisites
+## Setup on your server
+### Prerequisites
 
 To host this bot on your own, you need a few things.
-* Server to run the bot on <sub><sup>(1)</sup></sub>
-* A domain name with `HTTPS` enabled <sub><sup>(2)</sup></sub>
+* Server to run the bot on [^1]
+* A domain name with `HTTPS` enabled [^2]
 * A bot token, which you get from registering a new bot to the [@BotFather](https://t.me/BotFather)
 
 On your server:
@@ -36,7 +36,7 @@ On your server:
 * Nginx
 
 
-## Configuration
+### Configuration
 Link your domain to the bot
 
 > Once you have chosen a bot, send the /setdomain command to @Botfather to link your website's domain to the bot. Then configure your widget below and embed the code on your website.
@@ -51,20 +51,21 @@ Set following environment on your server
 | TELEGRAM_SECRET         | telegram-secret-string                           | The secret string gotten from @BotFather when create new bot |
 | TELEGRAM_WEBHOOK_SECRET | some-secret-string                               | To generate a secure url for webhook endpoint             |
 
-## Install
+### Install
 ```
 pip install -e '.[production]'
 ```
 
-## Run application
+### Run application
 ```
 uwsgi --enable-threads --socket 0.0.0.0:5000 --protocol http -w wsgi:webserver
 ```
 
-# Usage
+## Usage
 
+### Expense loggin
 
-Message structure
+Send a message in the configured group with the format.
 
 ```
 <expense subject: string> <amount: float><transaction_type:enum(‘’, ‘c’)>
@@ -76,25 +77,33 @@ Example:
 
 Debit expense:
 
-<img src="/chitie/assets/debit_expense.png"/>
+![Debit expense]({{ site.baseurl }}/assets/debit_expense.png)
 
 Credit expense:
 
-<img src="/chitie/assets/credit_expense.png"/>
+![Credit expense]({{ site.baseurl }}//assets/credit_expense.png)
 
-# Demo
+### Commands
+
+`/review <month-year>`: Summary all expenses in the given time range. The default time range is the current month if not given
+
+`/categories`: List all categories
+
+## Demo
 Init the expense chat group
 
-<img src="/chitie/assets/setup.gif"/>
+![Init the expense chat group]({{ site.baseurl }}/assets/setup.gif)
 
 Logging your expenses by sending a message
 
-<img src="/chitie/assets/logging.gif"/>
+![Logging your expenses by sending a message]({{ site.baseurl }}/assets/logging.gif)
+
 
 Review your expense in month
 
-<img src="/chitie/assets/review.gif"/>
+![Review your expense in month]({{ site.baseurl }}//assets/review.gif)
 
-# References
-1. I use [Digital Ocean]( https://m.do.co/c/13d83e9b5d60) with $6/month
-2. I use free SSL of [Cloudflare](https://www.cloudflare.com/ssl/)
+## References
+[^1]: I use [Digital Ocean](https://m.do.co/c/13d83e9b5d60) with $6/
+
+[^2]: I use free SSL of [Cloudflare](https://www.cloudflare.com/ssl/)
