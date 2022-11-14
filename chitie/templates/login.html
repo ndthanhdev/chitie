@@ -16,7 +16,7 @@
 	    </ul>
 	  {% endif %}
 	{% endwith %}
-	<script async src="https://telegram.org/js/telegram-widget.js?21" data-telegram-login="locnvexpensetracking_bot" data-size="large" data-auth-url="https://hde0.loqz.pw/tauth" data-request-access="write"></script>
+	<script async src="https://telegram.org/js/telegram-widget.js?21" data-telegram-login="{{ bot_username }}" data-size="large" data-auth-url="{{ callback_url }}" data-request-access="write"></script>
       </div>
     </div>
 {% endblock %}

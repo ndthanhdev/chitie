@@ -38,18 +38,7 @@ class SetupCommand(CommandHandler):
             admin.save()
         chitie_config.set('bot.group_id', str(event.chat.id))
         chitie_config.set('bot.group_type', event.chat.type)
-        reply_markup = telegram.InlineKeyboardMarkup([
-            [
-                telegram.InlineKeyboardButton(
-                    "Open",
-                    login_url=telegram.LoginUrl(url_for('web.telegram_auth', _external=True, _scheme='https')),
-                )
-            ]
-        ])
         event.bot.send_message(event.chat.id, t('setup done'))
-        mess = event.bot.send_message(event.chat.id, 'Web', reply_markup=reply_markup, parse_mode=telegram.ParseMode.HTML)
-        mess.pin(disable_notification=True)
-        event.delete()
 
 
 class ReviewCommand(CommandHandler):
@@ -85,10 +74,10 @@ class ReviewCommand(CommandHandler):
             f'{"t":2}| {total_amount:>{maxlength},}',
             "```",
         ])
-        event.bot.talks(text=content, parse_mode=telegram.ParseMode.MARKDOWN_V2)
+        event.bot.send_message(event.chat.id, text=content, parse_mode=telegram.ParseMode.MARKDOWN_V2)
 
 
-class ShortcutCommand(CommandHandler):
+class WebCommand(CommandHandler):
     def exec(self, event: Message):
         event.bot.unpin_all_chat_messages(event.chat.id)
         reply_markup = telegram.InlineKeyboardMarkup([
@@ -102,7 +91,7 @@ class ShortcutCommand(CommandHandler):
         event.bot.send_message(event.chat.id, 'Web', reply_markup=reply_markup, parse_mode=telegram.ParseMode.HTML)
 
 
-class ExpenseCategoryCommand(CommandHandler):
+class CategoryCommand(CommandHandler):
 
     def exec(self, event: 'Message'):
         categories = ExpenseCategory.query.order_by(ExpenseCategory.name.asc()).all()

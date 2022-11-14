@@ -39,7 +39,9 @@ def _load_auth():
 
 
 def login():
-    return render_template('login.html')
+    botinfo = bot.get_me()
+    callback_url = 'https://' + current_app.config['SERVER_NAME'] + '/tauth'
+    return render_template('login.html', bot_username=botinfo.username, callback_url=callback_url)
 
 
 def telegram_auth():

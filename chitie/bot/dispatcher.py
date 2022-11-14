@@ -12,8 +12,8 @@ from .callback import (
 from .command import (
     SetupCommand,
     ReviewCommand,
-    ShortcutCommand,
-    ExpenseCategoryCommand,
+    WebCommand,
+    CategoryCommand,
     CancelCommand
 )
 from .ext import Handler
@@ -35,8 +35,8 @@ def _build_chain(*args: List['Handler']) -> 'Handler':
 chatmessage_handler = _build_chain(
     SetupCommand(),
     ReviewCommand(),
-    ShortcutCommand(),
-    ExpenseCategoryCommand(),
+    WebCommand(),
+    CategoryCommand(),
     CancelCommand(),
     NewJoinUser(),
     LeftUser(),

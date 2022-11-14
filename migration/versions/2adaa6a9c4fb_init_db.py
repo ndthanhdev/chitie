@@ -1,7 +1,7 @@
 """Init DB
 
 Revision ID: 2adaa6a9c4fb
-Revises: 
+Revises:
 Create Date: 2022-11-12 20:18:29.005771+07:00
 
 """
@@ -58,10 +58,11 @@ def upgrade() -> None:
     op.create_table(
         "expense_items",
         sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
-        sa.Column("subject", sa.String(), nullable=False, index=True),
-        sa.Column("name", sa.String(), nullable=False),
-        sa.Column("transaction_type", sa.String(), unique=True),
-        sa.Column("category_id", sa.Integer(), primary_key=True),
+        sa.Column("subject", sa.String(), nullable=False),
+        sa.Column("amount", sa.Float(2), nullable=False),
+        sa.Column("transaction_type", sa.String()),
+        sa.Column("category_id", sa.Integer(), nullable=True),
+        sa.Column("telegram_chat_id", sa.BigInteger(), nullable=False),
         sa.Column("telegram_message_id", sa.BigInteger(), nullable=False),
         sa.Column("created_at", sa.DateTime, server_default=sa.text('NOW()'), index=True),
         sa.Column("updated_at", sa.DateTime, server_default=sa.text('NOW()'))

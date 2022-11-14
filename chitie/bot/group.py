@@ -77,6 +77,7 @@ class AddExpenseItem(GroupChatHandler):
         try:
             item = ExpenseItem.from_text(event.text)
             item.telegram_message_id = event.message_id
+            item.telegram_chat_id = event.chat.id
             item.save()
         except ExpenseItemIsInvalid:
             event.bot.send_message(event.chat.id, t('invalid format'))

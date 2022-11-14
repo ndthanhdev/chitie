@@ -17,10 +17,11 @@ class Item(connection.Model, ActiveRecord):
 
     id = sa.Column(sa.Integer, primary_key=True)
     subject = sa.Column(sa.String, nullable=False)
-    amount = sa.Column(sa.Float, nullable=False)
+    amount = sa.Column(sa.Float(2), nullable=False)
     category_id = sa.Column(sa.Integer, nullable=True)
     transaction_type = sa.Column(sa.String, nullable=False)
-    telegram_message_id = sa.Column(sa.Integer, nullable=True)
+    telegram_chat_id = sa.Column(sa.BigInteger, nullable=True)
+    telegram_message_id = sa.Column(sa.BigInteger, nullable=True)
     updated_at = sa.Column(sa.DateTime, nullable=True)
     created_at = sa.Column(sa.DateTime, nullable=False)
 

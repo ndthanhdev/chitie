@@ -19,7 +19,6 @@ class Chatcontext(connection.Model, ActiveRecord):
     serialized_handler = sa.Column(sa.JSON, nullable=False)
     is_active = sa.Column(sa.Boolean, nullable=False)
     created_at = sa.Column(sa.DateTime, nullable=True)
-    updated_at = sa.Column(sa.DateTime, nullable=True)
 
     @sa.orm.reconstructor
     def __init_on_load(self):
