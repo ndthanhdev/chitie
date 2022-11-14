@@ -1,6 +1,5 @@
 # 🤖chitie
 
-
 Chitie stands for `chi tiết` & `chi tiêu` in Vietnamese it means detail on your expenses. 
 
 This is a bot for the Telegram messaging app using their bot platform. It helps you to keep track of your expenses, supporting your financial planning. 
@@ -38,20 +37,29 @@ Link your domain to the bot
 > Once you have chosen a bot, send the /setdomain command to @Botfather to link your website's domain to the bot. Then configure your widget below and embed the code on your website.
 
 
-Set following environment on your server
+Set following environment variable on the running application session, or create an `.env` file in the root directory of the application
 
 
 | Property                | Example                                          | Description                                                  |
 |-------------------------|--------------------------------------------------|--------------------------------------------------------------|
-| DB_URL                  | postgresql://user:passwrod@localhost:5432/chitie | PostgreSQL connection url                                    |
+| DB_URL                  | postgresql://user:password@localhost:5432/chitie | PostgreSQL connection url                                    |
+| SECRET_KEY              | complex-random-string                            | A secret key that will be used for securely signing the session cookie and can be used for any other security related needs by extensions or your application|
+| SERVER_NAME             | chitie.yourdomain                                | Your web domain                                              |
 | TELEGRAM_SECRET         | telegram-secret-string                           | The secret string gotten from @BotFather when create new bot |
 | TELEGRAM_WEBHOOK_SECRET | some-secret-string                               | To generate a secure url for webhook endpoint                |
-| SERVER_NAME           | chitie.yourdomain                                  | Your web domain                                              |
-| TELEGRAM_WEBHOOK_SECRET | some-secret-string                               | To generate a secure url for webhook endpoint                |
 
-### Install
+### Initial setup
+
+Install dependencies
+
 ```
 pip install -e '.[production]'
+```
+
+Init database schema
+
+```
+alembic upgrade head
 ```
 
 ### Run application
@@ -83,9 +91,10 @@ Credit expense:
 
 ### Commands
 
-`/review <month-year>`: Summary all expenses in the given time range. The default time range is the current month if not given
-
-`/categories`: List all categories
+| Command | Description |
+| --- | --- |
+|/category| List all categories|
+|/review `<month-year>`| Summary all expenses in the given time range. The default time range is the current month if not given|
 
 ## Demo
 Init the expense chat group
