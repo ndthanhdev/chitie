@@ -1,8 +1,4 @@
----
-layout: page
-title: 🤖chitie
-permalink: /
----
+# 🤖chitie
 
 
 Chitie stands for `chi tiết` & `chi tiêu` in Vietnamese it means detail on your expenses. 
@@ -79,11 +75,11 @@ Example:
 
 Debit expense:
 
-![Debit expense]({{ site.baseurl }}/assets/debit_expense.png)
+![Debit expense](https://locnguyenvu.github.io/chitie/assets/debit_expense.png)
 
 Credit expense:
 
-![Credit expense]({{ site.baseurl }}//assets/credit_expense.png)
+![Credit expense](https://locnguyenvu.github.io/chitie/assets/credit_expense.png)
 
 ### Commands
 
@@ -94,16 +90,16 @@ Credit expense:
 ## Demo
 Init the expense chat group
 
-![Init the expense chat group]({{ site.baseurl }}/assets/setup.gif)
+![Init the expense chat group](https://locnguyenvu.github.io/chitie/assets/setup.gif)
 
 Logging your expenses by sending a message
 
-![Logging your expenses by sending a message]({{ site.baseurl }}/assets/logging.gif)
+![Logging your expenses by sending a message](https://locnguyenvu.github.io/chitie/assets/logging.gif)
 
 
 Review your expense in month
 
-![Review your expense in month]({{ site.baseurl }}//assets/review.gif)
+![Review your expense in month](https://locnguyenvu.github.io/chitie/assets/review.gif)
 
 ## References
 [^1]: I use [Digital Ocean](https://m.do.co/c/13d83e9b5d60) with $6/
