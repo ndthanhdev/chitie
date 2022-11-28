@@ -25,10 +25,10 @@ def create_app():
     app.config['TELEGRAM_WEBHOOK_SECRET'] = os.getenv("TELEGRAM_WEBHOOK_SECRET")
 
     with app.app_context():
-        from . import db, bot, config, web, cli
+        from . import db, telegram, config, web, cli
         db.init_app(app)
         config.load(app)
-        bot.init_app(app)
+        telegram.init_app(app)
         web.init_app(app)
         cli.init_app(app)
 

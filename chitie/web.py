@@ -7,7 +7,7 @@ import sqlalchemy as sa
 import telegram
 import telegram.error
 
-from chitie.bot import bot
+from .telegram import bot
 from flask import (
     Flask,
     Blueprint,
@@ -24,8 +24,8 @@ from flask import (
 from urllib.parse import unquote
 from .auth import user
 from .expense import (
-    ExpenseCategory,
-    ExpenseItem,
+    Category as ExpenseCategory,
+    Item as ExpenseItem,
     filter_expense
 )
 from .util import timerange
@@ -133,11 +133,22 @@ def detail_expense(expense_id):
 
 def init_app(app: Flask):
     web = Blueprint('web', __name__)
-    web.add_url_rule('/', endpoint='index', view_func=login_required(index))
-    web.add_url_rule('/expenses', endpoint='list_expenses', view_func=login_required(list_expenses))
-    web.add_url_rule('/expenses/<expense_id>', endpoint='detail_expense', methods=['GET', 'POST'], view_func=login_required(detail_expense))
-    web.add_url_rule('/login', endpoint='login', view_func=login)
-    web.add_url_rule('/tauth', endpoint='telegram_auth', view_func=telegram_auth)
+    web.add_url_rule('/',
+                     endpoint='index',
+                     view_func=login_required(index))
+    web.add_url_rule('/expenses',
+                     endpoint='list_expenses',
+                     view_func=login_required(list_expenses))
+    web.add_url_rule('/expenses/<expense_id>',
+                     endpoint='detail_expense',
+                     methods=['GET', 'POST'],
+                     view_func=login_required(detail_expense))
+    web.add_url_rule('/login',
+                     endpoint='login',
+                     view_func=login)
+    web.add_url_rule('/tauth',
+                     endpoint='telegram_auth',
+                     view_func=telegram_auth)
     web.before_request(_load_auth)
     app.register_blueprint(web)
     pass
